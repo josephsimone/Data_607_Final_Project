@@ -1,0 +1,82 @@
+---
+title: "Data 607 - Final Porject Proposal"
+author: "Joseph Simone"
+date: "11/15/2019"
+output:
+  html_document:
+    toc: true
+    theme: journal
+    highlights: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r, message=FALSE, warning= FALSE}
+library(jsonlite)
+library(tidyverse)
+library(tibble)
+library(knitr)
+```
+
+
+## Data Management and Acquisition Final Project Proprosal 
+## Mass and School Shooting in America Analysis
+
+### Background
+Not only is the topic of Gun Violence in America considered to be a $"hot"$ $"topic"$ for debate, the School and Mass Shooting epidemic in this country is one that can " hit slose to home" for most of us. During the research phase of this project, I could not decide whether I was going to focus just on $"School"$ related shooting or stick with $"Mass"$ shootings as a whole. Therefore, I'm going to use both for this analysis. Using the School Shooting Dataset as a subset of the overall Mass Shooting Dataset. Performing analysis along the way. For instances, one of these statistical measures can be, Which percent of mass shootings happen on K-12 School Campuses?
+
+### Data Sources
+
+##### Open Data Soft - Mass Shooting in America 
+[linked phrase](https://public.opendatasoft.com/explore/dataset/mass-shootings-in-america/information/)
+
+##### Center for Homeland Defense and Security - K-12 School Shooting Database 
+[linked phrase](https://www.chds.us/ssdb/)
+
+
+### Data Import & Initial Tidying
+#### Mass Shooting Data 
+```{r, message=FALSE, warning= FALSE}
+json_mass_file <-"https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/mass-shootings-in-america.json"
+```
+
+```{r, message=FALSE, warning= FALSE}
+yelp <- stream_in(file(json_mass_file))
+```
+
+```{r message=FALSE, warning= FALSE}
+yelp_flat <- flatten(yelp)
+str(yelp_flat)
+```
+
+```{r message=FALSE, warning= FALSE}
+yelp_tbl <- as_tibble(yelp_flat)
+```
+
+#### School Shooting Data 
+```{r, message=FALSE, warning= FALSE}
+school_file <- read_csv(file ="https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/K-12%20SSDB%20(Public)%20-%20K-12%20SSDB%20(Public)%20Linked.csv")
+```
+
+```{r}
+head(school_file)
+```
+
+
+```{r}
+colnames(school_file) = school_file[1, ]
+```
+
+```{r}
+colnames(school_file) = school_file[1, ]
+school_file = school_file[-1, ]
+```
+
+
+```{r}
+head(school_file)
+```
+
