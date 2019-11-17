@@ -40,21 +40,21 @@ Not only is the topic of Gun Violence in America considered to be a $"hot"$ $"to
 ### Data Import & Initial Tidying
 #### Mass Shooting Data 
 ```{r, message=FALSE, warning= FALSE}
-json_mass_file <-"https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/mass-shootings-in-america%20(1).json"
+json_mass_file <-"https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/mass-shootings-in-america.json"
 ```
 
 ```{r, message=FALSE, warning= FALSE}
-yelp <- stream_in(file(json_mass_file))
+mass <- fromJSON(json_mass_file)
+```
+
+```{r }
+
+mass_tbl<-as.data.frame(mass)
 ```
 
 ```{r message=FALSE, warning= FALSE}
-yelp_flat <- flatten(yelp)
-str(yelp_flat)
-yelp_tbl<-as.data.frame(yelp_flat)
-```
-
-```{r message=FALSE, warning= FALSE}
-mass_tbl<-as_tibble(yelp_tbl)
+mass_tbl<-as_tibble(mass_tbl)
+head(mass_tbl)
 ```
 
 #### School Shooting Data 
