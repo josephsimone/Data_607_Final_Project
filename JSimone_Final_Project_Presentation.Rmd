@@ -1,0 +1,258 @@
+---
+title: "Data Management and Acquisition Final Project <br> Mass and School Shootings in America Analysis"
+author: "Joseph Simone"
+date: "12/09/2019"
+output: 
+  slidy_presentation:
+    css: styles.css
+    font_adjustment: -1
+    footer: CUNY SPS MSDS DATA 607
+    highlight: pygments
+    transition: slower
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(jsonlite)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(tibble)
+library(knitr)
+library(ggplot2)
+library(mapproj)
+library(fiftystater)
+library(kableExtra)
+```
+
+## Background
+
+
+Not only is the topic of Gun Violence in America considered to be a $"hot-topic"$ for debate, the devastating events of School and Mass Shootings are an epidemic in this country. One that most of us can relate to. Unfortnately these two topics overlap from time to time. 
+
+## Data Sources
+
+<center>
+##### Open Data Soft - Mass Shooting in America 
+[Mass Shooting in America](https://public.opendatasoft.com/explore/dataset/mass-shootings-in-america/information/)
+
+##### Center for Homeland Defense and Security - K-12 School Shooting Database 
+[K-12 School Shooting Database](https://www.chds.us/ssdb/)
+</center>
+
+<center>![](C:/Users/jpsim/Documents/DATA Acquisition and Management/datasource.png) 
+
+## Research Question(s) ?
+
+<center>
+1. "According to the Mass Schooting Data-Set, which percentage of the data involves School related shootings?"
+2. "According to the School Shooting Data-Set, which State has the most occurences of gun related school instances?"
+</center>
+<center>![](C:/Users/jpsim/Documents/DATA Acquisition and Management/Question_Mark.png) 
+
+
+## Mass Shooting Data
+#### Importation of Data-Set 
+
+```{r, message=FALSE, warning= FALSE}
+json_mass_file <-"https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/mass-shootings-in-america.json"
+```
+
+```{r, message=FALSE, warning= FALSE}
+mass <- fromJSON(json_mass_file)
+```
+
+```{r, fig.align = 'center' }
+names(mass)
+```
+
+## Data Importation Contunied
+
+#### Mass Shooting Data Extrations 
+All the information for this Data-Set are stored in a Nested Json Category labeled "Fields"
+
+```{r, fig.align = 'center'}
+mass_fields <- as.data.frame(mass$fields)
+
+mass_fields <- mass_fields %>%
+    select(date, everything())
+```
+
+```{r}
+names(mass_fields)
+```
+
+
+#### Mass Shooting Data-Set Tidying 
+Date Format to Match the Second Data-Set
+```{r, fig.align = 'center'}
+mass_fields$date <- format(as.Date(mass_fields$date , format = "%Y-%m-%d"), "%m/%d/%Y")
+```
+
+## Creation of a subsetted Mass Shooting Data-Frame
+
+This newly created Data_Frame contains a count of whether or not an occurence in this Data-Set was a School Related Shooting or not.
+```{r, fig.align = 'center' }
+mass_school_related <-as.data.frame(mass_fields %>% count(school_related))
+mass_school_related
+```
+
+## Tidying of subsetted Shooting Dta-Frame
+```{r, fig.align = 'center'}
+NewRow2 <- mass_school_related$n[2] + mass_school_related$n[3]
+
+NewRow <- mass_school_related$n[1] + mass_school_related$n[4]
+mass_school_related <- rbind(mass_school_related, NewRow, NewRow2)
+mass_school_related <- mass_school_related[-c(1,2,3,4), ]
+mass_school_related$school_related[3] = "No"
+mass_school_related$school_related[2] = "Unknown"
+
+kable(mass_school_related)
+```
+
+
+## Pie Chart and Percent Calculation
+##### Count of each vartiable "No", "Yes", "Unkown"
+```{r, fig.align = 'center'}
+total <- sum(mass_school_related$n)
+
+pie = ggplot(mass_school_related, aes(x="", y=n, fill=school_related)) + geom_bar(stat="identity", width=1)
+
+pie = pie + coord_polar("y", start=0) + geom_text(aes(label = paste0(round(n / total * 100), "%")), position = position_stack(vjust = 0.5))
+
+pie = pie + scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999")) 
+
+pie = pie + labs(x = NULL, y = NULL, fill = NULL, title = "Percent of School Related Mass Shootings \nfrom 1966-2016 ")
+
+pie = pie + theme_classic() + theme(axis.line = element_blank(),
+                                    axis.text = element_blank(),
+                                    axis.ticks = element_blank(),
+                                    plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+
+```
+
+
+***
+```{r, fig.align = 'center'}
+pie
+```
+
+
+## School Shooting Data 
+#### Importation of Data-Set
+
+For this section of the project, I wanted to focus on the School-Related Shootings as a sub-category of Mass Shooting, however I wanted to use a more robust Data_Set for this task. After sub-setting the First Data-Set, there was only 307 occurrences. I found this second DataSet [K-12 School Shooting Database](https://www.chds.us/ssdb/), that is updated everyday.    
+ 
+```{r}
+dim(mass_fields)
+```
+
+ 
+```{r, message=FALSE, warning= FALSE}
+school_file <- read_csv(file ="https://raw.githubusercontent.com/josephsimone/Data_607_Final_Project/master/K-12%20SSDB%20(Public)%20-%20K-12%20SSDB%20(Public)%20Linked.csv")
+```
+
+```{r}
+dim(school_file)
+```
+
+
+
+## School Shooting Data Tidying
+
+```{r}
+colnames(school_file) = school_file[1, ]
+```
+
+```{r}
+colnames(school_file) = school_file[1, ]
+school_file = school_file[-1, ]
+school_data = as.data.frame(school_file)
+```
+
+
+```{r}
+names(school_file)
+```
+
+
+## Dropping of Duplicated Rows During Import
+```{r}
+school_file <- school_file[ -c(46:47) ]
+school_tbl = as.data.frame(school_file)
+```
+
+```{r}
+dim(school_tbl)
+```
+
+This Data-Set has significantly more instances than the Mass Shooting Data-Set, so I thought it was more effective to use this Data-Set for a second data Visualization
+
+## Creation of a subsetted School Shooting Data-Frame
+This newly created Data_Frame contains a count of how many occurence in this Data-Set take place in the Same State.
+
+#### School Shooting Data-Set Tidying
+```{r, fig.align='center'}
+school_states <-as.data.frame(school_tbl %>% count(State))
+kable(school_states)
+```
+
+## Tidying Continued
+Dropped St. Croix, US Virgin Islands because they are not part of the Continential United States
+```{r}
+school_states <- school_states[-c(43), ]
+```
+
+Convert State Abbreviates into State Names
+```{r, fig.align = 'center'}
+school_states$State <- tolower(state.name[match(school_states$State,  state.abb)])
+names(school_states)[names(school_states) == "State"] <- "state"
+kable(head(school_states, 5))
+```
+
+## States with the Most amount of School Shootings
+```{r, fig.align = 'center'}
+df_sorted_asc <- school_states[with(school_states, order(-n)), ]
+kable(head(df_sorted_asc, 10))
+```
+
+
+## Us Map Plot
+
+```{r warning=FALSE}
+gg <- ggplot(data= school_states, aes(map_id = state)) + 
+  geom_map(aes(fill = n),  color= "black", map = fifty_states) + 
+  expand_limits(x = fifty_states$long, y = fifty_states$lat) +
+  coord_map() +
+  geom_text(data = fifty_states %>%
+              group_by(id) %>%
+              summarise(lat = mean(c(max(lat), min(lat))),
+                        long = mean(c(max(long), min(long)))) %>%
+              mutate(state = id) %>%
+              left_join(school_states, by = "state"), aes(x = long, y = lat, label = n ))+
+  scale_x_continuous(breaks = NULL) + scale_y_continuous(breaks = NULL) +
+  labs(x = "", y = "") + theme(legend.position = "bottom")
+
+p <- gg + labs(title = " United States with the Highest Number of \n Occurences of School Shooting Since 1970")
+```
+
+***
+```{r warning=FALSE, fig.align = 'center'}
+p + fifty_states_inset_boxes()
+ 
+```
+
+
+
+
+## Conclusion
+
+Throughout my analysis, I found out some pretty interesting information from these two Data-Sets. First and formost, I found the second Data-Set to be more robust than the first. Also, I found the first Data-Set to have a lot of duplicate values.
+
+During my analyis of the first Data-Set, that only 24% of all Mass Shooting involved a School.
+
+Furthermore, during my analyis of the second Data-Set, that California was the state with the most occurences of School Shooting over the past 40 years.
+
+<center>![](C:/Users/jpsim/Documents/DATA Acquisition and Management/conclusion.jpg) 
